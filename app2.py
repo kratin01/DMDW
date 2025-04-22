@@ -4,7 +4,7 @@ import re
 from nltk.stem.porter import PorterStemmer
 from collections import defaultdict
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
 from sklearn.metrics.pairwise import cosine_similarity
 
 # 🌟 Title & Theme
@@ -41,13 +41,13 @@ for _, row in df.iterrows():
     for word in preprocess(row["description"]):
         inverted_index[word].add(row["id"])
 
-# 🧠 Train ML model
+# 🧠 Train ML model using SVM
 @st.cache_resource
 def train_model(df):
     tfidf = TfidfVectorizer()
     X = tfidf.fit_transform(df["description"])
     y = df["category"]
-    model = LogisticRegression()
+    model = LinearSVC()
     model.fit(X, y)
     return tfidf, model
 
@@ -98,7 +98,6 @@ if query:
     count_vec = CountVectorizer()
     vectors = count_vec.fit_transform(corpus)
     
-    # Check if vectors have more than 1 sample (i.e., ensure there are job descriptions to compare with)
     if vectors.shape[0] > 1:
         similarities = cosine_similarity(vectors[-1], vectors[:-1]).flatten()
         top_sim_indices = similarities.argsort()[::-1][:3]
